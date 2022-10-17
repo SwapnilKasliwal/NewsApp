@@ -3,7 +3,6 @@ import NewsItem from './NewsItem'
 import PropTypes from 'prop-types'
 import Spinner from './Spinner'
 
-
 export default class News extends Component {
 
     static propTypes = {
@@ -15,49 +14,43 @@ export default class News extends Component {
         country: "in",
         pageSize: "20"
     }
-     constructor(){
-    super()
+     constructor(props){
+    super(props)
     this.state = {
         articles : [],
         loading : false,
         page : 1
     }
    }
-
-   async componentDidMount(){
+   capitalize(element){
+    return element.toLowerCase()[0].toUpperCase() + element.slice(1,)
+   }
+   async updateNews(pageNo){
     this.setState({loading: true})
-    let data = await fetch(`https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=77aab9820db94af781584929c663b1c8&page=1&pageSize=${this.props.pageSize}`)
+    let data = await fetch(`https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=77aab9820db94af781584929c663b1c8&page=${pageNo}&pageSize=${this.props.pageSize}`)
     let newsArticles = await data.json()
     // This is the way we used always set the state of the state variables here in react.though we could have directly written
     // simply like other languages too
-    this.setState({articles: newsArticles.articles, totalArticles : newsArticles.totalResults, loading: false})
+    this.setState({articles: newsArticles.articles, totalArticles : newsArticles.totalResults, loading: false, page: pageNo})
+
+   }
+   async componentDidMount(){
+    document.title = this.capitalize(this.props.category)+" | NewsApp"
+    this.updateNews(1)
    }
 
    handleNextPage = async ()=>{
-    this.setState({loading: true})
-    if(!(this.state.page +1 > Math.ceil(this.state.totalArticles/20))){
-        let data = await fetch(`https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=77aab9820db94af781584929c663b1c8&page=${this.state.page+1}&pageSize=${this.props.pageSize}`)
-        let newsArticles = await data.json()
-        // This is the way we used always set the state of the state variables here in react.though we could have directly written
-        // simply like other languages too
-        this.setState({articles: newsArticles.articles, page : this.state.page +1, loading: false})
+    this.updateNews(this.state.page +1)
     }
-   }
    handlePreviousPage = async()=>{
-    this.setState({loading: true})
-        let data = await fetch(`https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=77aab9820db94af781584929c663b1c8&page=${this.state.page-1}&pageSize=${this.props.pageSize}`)
-        let newsArticles = await data.json()
-        // This is the way we used always set the state of the state variables here in react.though we could have directly written
-        // simply like other languages too
-        this.setState({articles: newsArticles.articles, page: this.state.page -1, loading: false})
-
+   this.updateNews(this.state.page-1)
    }
     
   render() {
     return (
-        <div className='container center'>
-            <h1 className='text-center' style={{margin: '40px'}}>NewsApp - Top Headlines for the day</h1>
-            <div className="row my-3">
+        <div className='container'>
+            <h1 className='text-center' style={{margin: '40px'}}>NewsApp - Top {this.capitalize(this.props.category)} Headlines</h1>
+            <div className="row my-3 d-flex justify-content-center">
                 {this.state.loading && <Spinner/>}
                 {this.state.articles.map((element)=>{
                    return <div key={element.url} className="col-md-3 my-2 mx-3">
